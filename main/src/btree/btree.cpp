@@ -1,4 +1,4 @@
-#include "btree.hpp"
+#include "../../include/btree/btree.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -324,6 +324,8 @@ bool BTree::save(const std::string& filename) const {
 }
 
 void BTree::write_node(std::ostream& out, const Node& n) const {
+    //temporario para testes somente, dps fazer puxar a compressao antes de salvar
+    
     out << "[" << n.id << "] ";
     if (n.id == root_id) out << "ROOT ";
     out << (n.is_leaf ? "LEAF" : "INTERNAL");

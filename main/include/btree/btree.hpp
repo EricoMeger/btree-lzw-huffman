@@ -88,4 +88,4 @@ private:
     // ----- salvar no arquivo
     void write_node(std::ostream& out, const Node& n) const;
 
-}
+};
