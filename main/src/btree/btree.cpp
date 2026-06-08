@@ -351,9 +351,64 @@ void BTree::write_node(std::ostream& out, const Node& n) const {
 #pragma region LOAD
 
 bool BTree::load(const std::string& filename) {
-    return true;
+    std::ifstream in(filename);
+    if (!in.is_open()) return false;
 
-    // TODO
+    nodes.clear();
+    root_id = -1;
+    next_id = 0;
+
+    std::string line;
+    std::getline(in, line);   // cabeçalho
+
+    std::istringstream ss(line);
+    std::string token;
+    while (ss >> token) {
+        if (token.rfind("order=", 0) == 0) order   = std::stoi(token.substr(6));
+        else if (token.rfind("root=",  0) == 0) root_id = std::stoi(token.substr(5));
+    }
+    
+    while (std::getline(in, line)) {
+        if (line.empty() || line[0] != '[') continue;
+
+        std::istringstream ss(line);
+        std::string token;
+        ss >> token;
+        int id = std::stoi(token.substr(1, token.size() - 2));
+
+        bool is_leaf = false;
+        while (ss >> token) {
+            if (token == "LEAF")     is_leaf = true;
+            else if (token == "INTERNAL") is_leaf = false;
+        }
+
+        Node n(id, is_leaf);
+
+        std::getline(in, line);
+        std::istringstream ks(line);
+        std::string ktag, ktoken;
+        ks >> ktag;
+        while (ks >> ktoken) {
+            auto sep = ktoken.find(':');
+            Key k;
+            k.hash = static_cast<uint32_t>(std::stoul(ktoken.substr(0, sep), nullptr, 16));
+            k.original = ktoken.substr(sep + 1);
+            n.keys.push_back(k);
+        }
+
+        if (!is_leaf) {
+            std::getline(in, line);
+            std::istringstream cs(line);
+            std::string ctag, ctoken;
+            cs >> ctag;
+            while (cs >> ctoken) n.children.push_back(std::stoi(ctoken));
+        }
+
+        nodes.push_back(n);
+        next_id = std::max(next_id, id + 1);
+    }
+
+    return true;
 }
 
 #pragma endregion LOAD
